@@ -1,0 +1,12 @@
+{
+  "id": "com.example.tamiltv",
+  "version": "0.1.0",
+  "vendor": "Tamil TV Prototype",
+  "type": "web",
+  "main": "index.html",
+  "title": "Tamil TV",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#0b0d12",
+  "resolution": "1920x1080"
+}

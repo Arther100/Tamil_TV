@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Tamil TV</title>
+  <link rel="stylesheet" href="styles/app.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Tamil TV</h1>
+    <span class="tag">Prototype · dev/testing playlist</span>
+    <span id="status" class="status"></span>
+  </header>
+
+  <main>
+    <nav id="categories" class="rail" aria-label="Categories"></nav>
+    <section id="grid" class="grid" aria-label="Channels"></section>
+  </main>
+
+  <footer class="keys">
+    <span>Last key: <b id="lastKey">-</b></span>
+    <span>keyCode: <b id="lastCode">-</b></span>
+    <span>R = refresh</span>
+    <span>Focus: <b id="focusInfo">-</b></span>
+  </footer>
+
+  <script src="src/mock-data.js"></script>
+  <script src="src/m3u-parser.js"></script>
+  <script src="src/playlist.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
