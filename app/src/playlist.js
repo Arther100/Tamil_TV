@@ -2,7 +2,7 @@
 (function () {
   "use strict";
   var URL = "https://iptv-org.github.io/iptv/languages/tam.m3u";
-  var CACHE_KEY = "tamiltv.catalogue.v1";
+  var CACHE_KEY = "tamiltv.catalogue.v2"; // bumped: channel model changed (categories, resolution)
   var MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
   function readCache() {

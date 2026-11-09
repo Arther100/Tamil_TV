@@ -25,9 +25,22 @@
     <span>Focus: <b id="focusInfo">-</b></span>
   </footer>
 
+  <div id="player" class="player hidden">
+    <video id="video" playsinline></video>
+    <div id="overlay" class="overlay hidden">
+      <img id="ovLogo" class="ovlogo" alt="">
+      <div>
+        <div id="ovName" class="ovname"></div>
+        <div id="ovMeta" class="ovmeta"></div>
+      </div>
+    </div>
+    <div id="playMsg" class="playmsg hidden"></div>
+  </div>
+
   <script src="src/mock-data.js"></script>
   <script src="src/m3u-parser.js"></script>
   <script src="src/playlist.js"></script>
+  <script src="src/player.js"></script>
   <script src="src/main.js"></script>
 </body>
 </html>

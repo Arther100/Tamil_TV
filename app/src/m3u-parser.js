@@ -2,6 +2,8 @@
 (function (root) {
   "use strict";
 
+  var HD_CATEGORY = "HD Channels";
+
   function parseAttrs(str) {
     var attrs = {};
     var re = /([A-Za-z0-9_-]+)="([^"]*)"/g;
@@ -29,6 +31,40 @@
     return (h >>> 0).toString(36);
   }
 
+  // iptv-org appends "(1080p)" and tags like "[Geo-blocked]" to names.
+  // Move them out of the display name. Resolution is the playlist's own label,
+  // not something measured by this app.
+  function cleanName(raw) {
+    var res = null;
+    var tags = [];
+    var name = raw.replace(/\s*\((\d{3,4})p\)/i, function (m, r) { res = parseInt(r, 10); return ""; });
+    name = name.replace(/\s*\[([^\]]*)\]/g, function (m, t) { tags.push(t.trim()); return ""; });
+    name = name.replace(/\s+/g, " ").trim();
+    return { name: name, resolution: res, tags: tags };
+  }
+
+  function qualityFrom(res) {
+    if (res === null || res === undefined) return "unknown";
+    if (res >= 2160) return "uhd";
+    if (res >= 1080) return "full-hd";
+    if (res >= 720) return "hd";
+    return "sd";
+  }
+
+  // 'Animation;Kids' -> ['Animation', 'Kids']
+  function splitCategories(group) {
+    var out = [];
+    var seen = {};
+    (group || "").split(";").forEach(function (p) {
+      p = p.trim();
+      if (!p || /^undefined$/i.test(p)) return;
+      p = p.charAt(0).toUpperCase() + p.slice(1);
+      var k = p.toLowerCase();
+      if (!seen[k]) { seen[k] = true; out.push(p); }
+    });
+    return out.length ? out : ["Other"];
+  }
+
   function parseM3U(text) {
     var warnings = [];
     var channels = [];
@@ -45,35 +81,43 @@
       if (line.indexOf("#EXTINF") === 0) {
         var parts = splitExtinf(line);
         var attrs = parseAttrs(parts[0]);
-        pending = { attrs: attrs, name: (parts[1] || attrs["tvg-name"] || "").trim() };
+        pending = { attrs: attrs, rawName: (parts[1] || attrs["tvg-name"] || "").trim() };
         continue;
       }
-      if (line.charAt(0) === "#") continue; // other tags/comments (#EXTVLCOPT etc.)
+      if (line.charAt(0) === "#") continue; // other tags/comments
       if (!pending) continue;
 
+      var cleaned = cleanName(pending.rawName);
       if (!isHttpUrl(line)) {
-        warnings.push("Skipped non-HTTP(S) URL for " + pending.name);
+        warnings.push("Skipped non-HTTP(S) URL for " + (cleaned.name || "unnamed entry"));
         pending = null;
         continue;
       }
-      if (!pending.name) {
+      if (!cleaned.name) {
         warnings.push("Skipped entry with no name");
         pending = null;
         continue;
       }
       var logo = pending.attrs["tvg-logo"];
-      var key = (pending.attrs["tvg-id"] || pending.name.toLowerCase()) + "|" + line;
+      var key = (pending.attrs["tvg-id"] || pending.rawName.toLowerCase()) + "|" + line;
       if (seen[key]) { pending = null; continue; } // de-duplicate
       seen[key] = true;
 
+      var quality = qualityFrom(cleaned.resolution);
+      var categories = splitCategories(pending.attrs["group-title"]);
+      if (quality === "hd" || quality === "full-hd" || quality === "uhd") categories.push(HD_CATEGORY);
+
       channels.push({
         id: pending.attrs["tvg-id"] ? pending.attrs["tvg-id"] + "-" + hash(line) : hash(key),
-        name: pending.name,
+        name: cleaned.name,
         language: "tam",
-        category: (pending.attrs["group-title"] || "").trim() || "Other",
+        category: categories[0],
+        categories: categories,
         logoUrl: logo && isHttpUrl(logo) ? logo : null,
         streamUrl: line,
-        quality: "unknown",           // never inferred from the name
+        quality: quality,              // from the playlist's own label only
+        resolution: cleaned.resolution,
+        tags: cleaned.tags,
         authorizationStatus: "unverified"
       });
       pending = null;
@@ -82,5 +126,6 @@
   }
 
   root.parseM3U = parseM3U;
-  if (typeof module !== "undefined") module.exports = { parseM3U: parseM3U };
+  root.HD_CATEGORY = HD_CATEGORY;
+  if (typeof module !== "undefined") module.exports = { parseM3U: parseM3U, HD_CATEGORY: HD_CATEGORY };
 })(typeof window !== "undefined" ? window : globalThis);
